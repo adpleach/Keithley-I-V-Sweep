@@ -2,10 +2,9 @@
 """
 Keithley I-V Sweep
 Demis John, October 2014
+Modified by adpleach to work with Vanderbilt Keithley SMU
 
 Program to sweep voltage & measure current on Keithley SMU
-Known bugs: With PythonXY, the plot window opens *behind* the current window.
-Also, file is saved *usually* in same directory as this script - but at one point it kept saving into the PythonXY directory, which was confusing.  Probably need to set the Python working directory to be sure.
 
 Edit/Run this file via Python(x,y) (click the 1st button to open the Spyder IDE)
 Installed PyVISA for GPIB communication.
@@ -17,12 +16,12 @@ Based off Steve Nichols' Script from ~2010
 SaveFiles = True   # Save the plot & data?  Only display if False.
 
 DevName = 'I-V Curve 01' # will be inserted into filename of saved plot
-Keithley_GPIB_Addr = 22
+Keithley_GPIB_Addr = 24
 
 CurrentCompliance = 1.0e-3    # compliance (max) current
-start = -5.0     # starting value of Voltage sweep
-stop = +5.0      # ending value 
-numpoints = 100  # number of points in sweep
+start = -1.0     # starting value of Voltage sweep
+stop = +1.0      # ending value 
+numpoints = 101  # number of points in sweep
 
 
 
@@ -35,7 +34,7 @@ import matplotlib.pyplot as plt # for python-style plottting, like 'ax1.plot(x,y
 
 
 # Open Visa connections to instruments
-#keithley = visa.GpibInstrument(22)     # GPIB addr 22
+#keithley = visa.GpibInstrument(24)     # GPIB addr 24
 rm = visa.ResourceManager()
 keithley = rm.get_instrument(  'GPIB::' + str(Keithley_GPIB_Addr)  )
 
@@ -93,9 +92,6 @@ keithley.close()
     
     
 
-
-
-
 ###### Plot #####
     
 fig1, ax1 = plt.subplots(nrows=1, ncols=1)         # new figure & axis
@@ -108,18 +104,24 @@ ax1.set_ylabel('Current (mA)')
 ax1.set_title('I-V Curve - ' + DevName)
 
 
-fig1.show()  # draw & show the plot - unfortunately it often opens underneath other windows
-fig1.canvas.window().raise_()
+plt.show()  # draw & show the plot - unfortunately it often opens underneath other windows
+
+# if SaveFiles:
+    # create subfolder if needed:
+    # if not os.path.isdir(DevName): os.mkdir(DevName)
+    # curtime = time.strftime('%Y-%M-%d_%H%M.%S')
+    # SavePath = os.path.join(DevName, 'I-V Curve - ' + DevName + ' - [' + curtime +']' )
+    # fig1.savefig(  SavePath + '.png'  )
+    
+    # data = np.array(  zip(Current, Voltage)  )
+    # np.savetxt( SavePath + '.txt', data, fmt="%e", delimiter="\t", header="Current (A)\tVoltage (V)" )
+    # np.array(Voltage).tofile(  os.path.join(DevName, 'I-V Voltage - ' + DevName + ' - [' + curtime +'].txt' )  )
+    # np.array(Current).tofile(  os.path.join(DevName, 'I-V Current - ' + DevName + ' - [' + curtime +'].txt' )  )
+#end if(SaveFiles)
 
 if SaveFiles:
-    # create subfolder if needed:
-    if not os.path.isdir(DevName): os.mkdir(DevName)
+    if not os.path.isdir(DevName): os.mkdir(DevName)    # create subfolder
     curtime = time.strftime('%Y-%M-%d_%H%M.%S')
     SavePath = os.path.join(DevName, 'I-V Curve - ' + DevName + ' - [' + curtime +']' )
     fig1.savefig(  SavePath + '.png'  )
-    
-    data = np.array(  zip(Current, Voltage)  )
-    np.savetxt( SavePath + '.txt', data, fmt="%e", delimiter="\t", header="Current (A)\tVoltage (V)" )
-    #np.array(Voltage).tofile(  os.path.join(DevName, 'I-V Voltage - ' + DevName + ' - [' + curtime +'].txt' )  )
-    #np.array(Current).tofile(  os.path.join(DevName, 'I-V Current - ' + DevName + ' - [' + curtime +'].txt' )  )
-#end if(SaveFiles)
+    N.savetxt( SavePath + '.txt', [Current,Voltage], fmt="%e", delimiter="\t", header="Current (A)\tVoltage (V)" )
